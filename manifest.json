@@ -1,0 +1,12 @@
+[
+  {
+    "guid": "c1d2e3f4-a5b6-c7d8-e9f0-a1b2c3d4e5f6",
+    "name": "SeerrRequestFav",
+    "description": "Automatically request movies and TV shows in Jellyseerr/Overseerr when you mark them as a favourite in Jellyfin.",
+    "overview": "When you star an item as a favourite in Jellyfin, SeerrRequestFav automatically creates a download request for it in Jellyseerr. Items that are already on disk or already requested are skipped.",
+    "owner": "rxng",
+    "category": "Metadata",
+    "imageUrl": "",
+    "versions": []
+  }
+]

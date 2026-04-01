@@ -1,0 +1,132 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"   # e.g. v1.0.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.0.0)"
+        required: true
+
+permissions:
+  contents: write  # create releases + push manifest update
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Resolve version ────────────────────────────────────────────────────
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing version $VERSION"
+
+      # ── Checkout ───────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Need full history so we can push the manifest update back
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── .NET ───────────────────────────────────────────────────────────────
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.x"
+
+      # ── Build ──────────────────────────────────────────────────────────────
+      - name: Build (Release)
+        run: |
+          dotnet build SeerrRequestFav.csproj \
+            --configuration Release \
+            -p:AssemblyVersion=${{ steps.version.outputs.VERSION }} \
+            -p:FileVersion=${{ steps.version.outputs.VERSION }}
+
+      # ── Package ────────────────────────────────────────────────────────────
+      - name: Package
+        id: package
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          DLL="bin/Release/net9.0/SeerrRequestFav.dll"
+          ZIP="SeerrRequestFav_${VERSION}.zip"
+          zip -j "$ZIP" "$DLL"
+          MD5=$(md5sum "$ZIP" | awk '{print $1}')
+          echo "ZIP=$ZIP"   >> "$GITHUB_OUTPUT"
+          echo "MD5=$MD5"   >> "$GITHUB_OUTPUT"
+
+      # ── Update manifest.json ───────────────────────────────────────────────
+      - name: Update manifest.json
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          ZIP="${{ steps.package.outputs.ZIP }}"
+          MD5="${{ steps.package.outputs.MD5 }}"
+          REPO="${{ github.repository }}"
+          DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${ZIP}"
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          # Prepend new version entry into the versions array of manifest.json
+          NEW_ENTRY=$(jq -n \
+            --arg version  "$VERSION" \
+            --arg changelog "https://github.com/${REPO}/releases/tag/v${VERSION}" \
+            --arg targetAbi "10.11.0.0" \
+            --arg sourceUrl "$DOWNLOAD_URL" \
+            --arg checksum  "$MD5" \
+            --arg timestamp "$TIMESTAMP" \
+            '{version: $version, changelog: $changelog, targetAbi: $targetAbi, sourceUrl: $sourceUrl, checksum: $checksum, timestamp: $timestamp}')
+
+          # Insert at front of versions array (newest first)
+          jq --argjson entry "$NEW_ENTRY" '.[0].versions = [$entry] + .[0].versions' manifest.json > manifest.tmp
+          mv manifest.tmp manifest.json
+
+          echo "Updated manifest.json:"
+          cat manifest.json
+
+      # ── Commit manifest back to main ───────────────────────────────────────
+      - name: Commit updated manifest
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "chore: add v${{ steps.version.outputs.VERSION }} to manifest [skip ci]"
+          git push origin HEAD:main
+
+      # ── Create GitHub Release ──────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ steps.version.outputs.VERSION }}"
+          name: "SeerrRequestFav v${{ steps.version.outputs.VERSION }}"
+          body: |
+            ## SeerrRequestFav v${{ steps.version.outputs.VERSION }}
+
+            Automatically request movies and TV shows in Jellyseerr when marked as favourite in Jellyfin.
+
+            ### Install via manifest URL (recommended)
+            In Jellyfin: **Dashboard → Plugins → Repositories → Add**
+            ```
+            https://rxng.github.io/Jellyfin.Plugin.SeerrRequestFav/manifest.json
+            ```
+
+            ### Manual install
+            1. Download `${{ steps.package.outputs.ZIP }}`
+            2. Extract `SeerrRequestFav.dll` into your Jellyfin plugins folder
+            3. Restart Jellyfin
+            4. Configure under **Dashboard → Plugins → SeerrRequestFav**
+
+            ### Requirements
+            - Jellyfin 10.11+
+            - Jellyseerr with Jellyfin auth configured (users must be linked)
+
+            **MD5:** `${{ steps.package.outputs.MD5 }}`
+          files: ${{ steps.package.outputs.ZIP }}
+          generate_release_notes: false
