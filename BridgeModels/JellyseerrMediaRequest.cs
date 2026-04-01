@@ -13,15 +13,18 @@ public class JellyseerrMediaRequest : MediaRequest
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public new MediaType Type { get; set; }
 
+    [JsonIgnore]
+    public new Media Media { get; set; } = new();
+
     [JsonPropertyName("media")]
-    public new JellyseerrMedia? Media { get; set; }
+    public JellyseerrMedia? JellyseerrMedia { get; set; }
 
     /// <summary>
     /// Returns true if this request matches the given Jellyfin item by TMDB ID and media type.
     /// </summary>
     public bool EqualsItem(IJellyfinItem? item)
     {
-        if (item == null || Media == null) return false;
+        if (item == null || JellyseerrMedia == null) return false;
         var tmdbId = item.GetTmdbId();
         if (!tmdbId.HasValue) return false;
         var mediaType = item switch
@@ -30,6 +33,6 @@ public class JellyseerrMediaRequest : MediaRequest
             JellyfinSeries => MediaType.TV,
             _ => throw new NotSupportedException($"Unsupported item type: {item.GetType().Name}")
         };
-        return Media.TmdbId == tmdbId.Value && Media.MediaType == mediaType;
+        return JellyseerrMedia.TmdbId == tmdbId.Value && JellyseerrMedia.MediaType == mediaType;
     }
 }

@@ -128,8 +128,8 @@ public class FavoriteService
                 jellyseerrRequests
                     .Where(r => r != null &&
                                 r.Status != MediaRequestStatus.DECLINED &&
-                                r.Media != null)
-                    .Select(r => (r.Media!.MediaType, r.Media.TmdbId)));
+                                r.JellyseerrMedia != null)
+                    .Select(r => (r.JellyseerrMedia!.MediaType, r.JellyseerrMedia.TmdbId)));
 
             foreach (var fav in allFavorites)
             {
