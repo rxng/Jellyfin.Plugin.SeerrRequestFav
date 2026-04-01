@@ -301,6 +301,13 @@ public class ApiService
 
                 var response = await _httpClient.SendAsync(req, cts.Token).ConfigureAwait(false);
 
+                // 409 Conflict = already requested in Jellyseerr – not an error, just skip.
+                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    _logger.LogDebug("Jellyseerr returned 409 (already exists) for {Url} – skipping", url);
+                    return null;
+                }
+
                 if (!response.IsSuccessStatusCode)
                 {
                     throw new HttpRequestException(
