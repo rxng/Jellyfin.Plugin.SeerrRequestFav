@@ -46,7 +46,11 @@
                 <div class="checkboxContainer checkboxContainer-withDescription">
                     <label class="emby-checkbox-label">
                         <input id="srfIsEnabled" type="checkbox" is="emby-checkbox" data-embycheckbox="true" class="emby-checkbox" />
-                        <span>Enable SeerrRequestFav</span>
+                        <span class="checkboxLabel">Enable SeerrRequestFav</span>
+                        <span class="checkboxOutline">
+                            <span class="material-icons checkboxIcon checkboxIcon-checked check" aria-hidden="true"></span>
+                            <span class="material-icons checkboxIcon checkboxIcon-unchecked" aria-hidden="true"></span>
+                        </span>
                     </label>
                     <div class="fieldDescription checkboxFieldDescription">
                         When disabled the plugin will not process any favourite events or run syncs.
@@ -80,7 +84,11 @@
                 <div class="checkboxContainer checkboxContainer-withDescription">
                     <label class="emby-checkbox-label">
                         <input id="srfResponsiveFavoriteRequests" type="checkbox" is="emby-checkbox" data-embycheckbox="true" class="emby-checkbox" />
-                        <span>Reactive favourite requests</span>
+                        <span class="checkboxLabel">Reactive favourite requests</span>
+                        <span class="checkboxOutline">
+                            <span class="material-icons checkboxIcon checkboxIcon-checked check" aria-hidden="true"></span>
+                            <span class="material-icons checkboxIcon checkboxIcon-unchecked" aria-hidden="true"></span>
+                        </span>
                     </label>
                     <div class="fieldDescription checkboxFieldDescription">
                         Immediately send a request to Jellyseerr when an item is marked as favourite.
@@ -91,7 +99,11 @@
                 <div class="checkboxContainer checkboxContainer-withDescription">
                     <label class="emby-checkbox-label">
                         <input id="srfRemoveRequestedFromFavorites" type="checkbox" is="emby-checkbox" data-embycheckbox="true" class="emby-checkbox" />
-                        <span>Unfavourite after requesting</span>
+                        <span class="checkboxLabel">Unfavourite after requesting</span>
+                        <span class="checkboxOutline">
+                            <span class="material-icons checkboxIcon checkboxIcon-checked check" aria-hidden="true"></span>
+                            <span class="material-icons checkboxIcon checkboxIcon-unchecked" aria-hidden="true"></span>
+                        </span>
                     </label>
                     <div class="fieldDescription checkboxFieldDescription">
                         Remove the favourite flag once the item has been successfully requested in Jellyseerr.
@@ -101,7 +113,11 @@
                 <div class="checkboxContainer checkboxContainer-withDescription">
                     <label class="emby-checkbox-label">
                         <input id="srfRequestFirstSeason" type="checkbox" is="emby-checkbox" data-embycheckbox="true" class="emby-checkbox" />
-                        <span>Request first season only for new TV shows</span>
+                        <span class="checkboxLabel">Request first season only for new TV shows</span>
+                        <span class="checkboxOutline">
+                            <span class="material-icons checkboxIcon checkboxIcon-checked check" aria-hidden="true"></span>
+                            <span class="material-icons checkboxIcon checkboxIcon-unchecked" aria-hidden="true"></span>
+                        </span>
                     </label>
                     <div class="fieldDescription checkboxFieldDescription">
                         When requesting a TV series, only request season 1 instead of all seasons.
@@ -138,7 +154,11 @@
                     <div class="checkboxContainer checkboxContainer-withDescription" style="margin-top: 1em;">
                         <label class="emby-checkbox-label">
                             <input id="srfEnableDebugLogging" type="checkbox" is="emby-checkbox" data-embycheckbox="true" class="emby-checkbox" />
-                            <span>Enable debug logging</span>
+                            <span class="checkboxLabel">Enable debug logging</span>
+                            <span class="checkboxOutline">
+                                <span class="material-icons checkboxIcon checkboxIcon-checked check" aria-hidden="true"></span>
+                                <span class="material-icons checkboxIcon checkboxIcon-unchecked" aria-hidden="true"></span>
+                            </span>
                         </label>
                         <div class="fieldDescription checkboxFieldDescription">
                             Elevates debug-level log entries to Information so they appear in the Jellyfin log.
@@ -148,7 +168,11 @@
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label">
                             <input id="srfEnableTraceLogging" type="checkbox" is="emby-checkbox" data-embycheckbox="true" class="emby-checkbox" />
-                            <span>Enable trace logging</span>
+                            <span class="checkboxLabel">Enable trace logging</span>
+                            <span class="checkboxOutline">
+                                <span class="material-icons checkboxIcon checkboxIcon-checked check" aria-hidden="true"></span>
+                                <span class="material-icons checkboxIcon checkboxIcon-unchecked" aria-hidden="true"></span>
+                            </span>
                         </label>
                         <div class="fieldDescription checkboxFieldDescription">
                             Very verbose – logs individual API calls and item-level detail.
