@@ -186,6 +186,9 @@ public class ApiService
                     if (pageResponse == null) break;
 
                     var resultsProperty = pageResponse.GetType().GetProperty("Results");
+                    var pageInfoProperty = pageResponse.GetType().GetProperty("PageInfo");
+                    var pageInfo = pageInfoProperty?.GetValue(pageResponse) as BridgeModels.PageInfo;
+
                     if (resultsProperty?.GetValue(pageResponse) is IEnumerable resultsEnum)
                     {
                         var itemCount = 0;
@@ -195,6 +198,9 @@ public class ApiService
                             itemCount++;
                         }
                         if (itemCount == 0) break;
+                        // Use pageInfo.Pages when available — prevents infinite loops
+                        // when Jellyseerr returns the same page repeatedly (e.g. huge take value).
+                        if (pageInfo != null && page >= pageInfo.Pages) break;
                     }
                     else
                     {
