@@ -73,9 +73,10 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Switch to main (handles detached HEAD from tag checkout)
+          # Switch to main (handles detached HEAD from tag checkout).
+          # Force checkout to discard build artifacts left in the working tree.
           git fetch origin main
-          git checkout -B main origin/main
+          git checkout -f -B main origin/main
           # Re-apply the manifest update onto the latest main
           VERSION="${{ steps.version.outputs.VERSION }}"
           ZIP="${{ steps.package.outputs.ZIP }}"
