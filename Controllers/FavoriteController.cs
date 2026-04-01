@@ -202,6 +202,8 @@ public class FavoriteController : ControllerBase
             var (alreadyLocal, needsRequest) = _favoriteService.SplitByLocalFile(allFavorites);
             _logger.LogInformation("{Local} items already on disk (skipped), {Needs} to check",
                 alreadyLocal.Count, needsRequest.Count);
+            foreach (var f in alreadyLocal.DistinctBy(f => f.item.Id))
+                _logger.LogInformation("  [on disk]   {Name}", f.item.Name);
 
             if (needsRequest.Count == 0)
                 return (object)new
@@ -226,6 +228,10 @@ public class FavoriteController : ControllerBase
 
             _logger.LogInformation("{PendingCount} pending, {AlreadyCount} already requested",
                 pendingFavorites.Count, alreadyRequested.Count);
+            foreach (var f in alreadyRequested.DistinctBy(f => f.item.Id))
+                _logger.LogInformation("  [requested] {Name}", f.item.Name);
+            foreach (var f in pendingFavorites.DistinctBy(f => f.item.Id))
+                _logger.LogInformation("  [pending]   {Name}", f.item.Name);
 
             // Step 7 – Map Jellyfin users to Jellyseerr users.
             var withUser = _favoriteService.EnsureJellyseerrUser(pendingFavorites, jellyseerrUsers);
@@ -244,6 +250,10 @@ public class FavoriteController : ControllerBase
             _logger.LogInformation(
                 "SyncFavorites complete: {Created} created, {Failed} failed, {Cleared} unfavourited, {Local} skipped (on disk)",
                 processed.Count, blocked.Count, cleared.Count, alreadyLocal.Count);
+            foreach (var (item, _) in processed)
+                _logger.LogInformation("  [created]   {Name}", item.Name);
+            foreach (var item in blocked)
+                _logger.LogInformation("  [failed]    {Name}", item.Name);
 
             return (object)new
             {
