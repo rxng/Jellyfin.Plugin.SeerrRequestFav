@@ -16,8 +16,8 @@ namespace Jellyfin.Plugin.SeerrRequestFav.Services;
 /// </summary>
 public class ApiService
 {
-    public const int MAX_SAFE_INTEGER = int.MaxValue;
     public const int MAX_PAGES = int.MaxValue;
+    private const int PAGE_SIZE = 50;
 
     private readonly HttpClient _httpClient;
     private readonly DebugLogger<ApiService> _logger;
@@ -253,11 +253,11 @@ public class ApiService
             JellyseerrEndpoint.ReadRequests => (
                 new Dictionary<string, object>
                 {
-                    ["take"] = MAX_SAFE_INTEGER,
+                    ["take"] = PAGE_SIZE,
                     ["mediaType"] = "all"
                 }, null),
             JellyseerrEndpoint.UserList => (
-                new Dictionary<string, object> { ["take"] = MAX_SAFE_INTEGER }, null),
+                new Dictionary<string, object> { ["take"] = PAGE_SIZE }, null),
             _ => (null, null)
         };
     }
