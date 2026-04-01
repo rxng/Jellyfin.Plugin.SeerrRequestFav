@@ -47,6 +47,17 @@ public class JellyseerrMedia : Media
     [JsonPropertyName("externalServiceId4k")]
     public int? ExternalServiceId4kInt { get; set; }
 
+    [JsonIgnore]
+    public new List<MediaRequest>? Requests { get; set; }
     [JsonPropertyName("requests")]
     public List<JellyseerrMediaRequest> JellyseerrRequests { get; set; } = new();
+
+    [JsonIgnore]
+    public new List<Season>? Seasons { get; set; }
+
+    [JsonIgnore]
+    public new List<Issue>? Issues { get; set; }
+
+    [JsonIgnore]
+    public new Blacklist? Blacklist { get; set; }
 }
