@@ -177,9 +177,6 @@ public class ApiService
                         ? new Dictionary<string, object>(queryParams) { ["page"] = page }
                         : new Dictionary<string, object> { ["page"] = page };
 
-                    if (queryParams != null && queryParams.ContainsKey("take"))
-                        pageParameters = queryParams;
-
                     var req = JellyseerrUrlBuilder.BuildEndpointRequest(
                         config.JellyseerrUrl, endpoint, config.ApiKey, pageParameters);
                     content = await MakeApiRequestAsync(req, config);
