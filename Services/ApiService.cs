@@ -16,8 +16,8 @@ namespace Jellyfin.Plugin.SeerrRequestFav.Services;
 /// </summary>
 public class ApiService
 {
+    public const int MAX_SAFE_INTEGER = int.MaxValue;
     public const int MAX_PAGES = int.MaxValue;
-    private const int PAGE_SIZE = 50;
 
     private readonly HttpClient _httpClient;
     private readonly DebugLogger<ApiService> _logger;
@@ -176,6 +176,9 @@ public class ApiService
                     var pageParameters = queryParams != null
                         ? new Dictionary<string, object>(queryParams) { ["page"] = page }
                         : new Dictionary<string, object> { ["page"] = page };
+                    // If take is present, send it as-is without a page number (one large fetch)
+                    if (queryParams != null && queryParams.ContainsKey("take"))
+                        pageParameters = queryParams;
 
                     var req = JellyseerrUrlBuilder.BuildEndpointRequest(
                         config.JellyseerrUrl, endpoint, config.ApiKey, pageParameters);
@@ -253,11 +256,12 @@ public class ApiService
             JellyseerrEndpoint.ReadRequests => (
                 new Dictionary<string, object>
                 {
-                    ["take"] = PAGE_SIZE,
+                    ["take"] = MAX_SAFE_INTEGER,
                     ["mediaType"] = "all"
                 }, null),
+            // UserList: use take to fetch all users in one request (no page param — matches JellyBridge)
             JellyseerrEndpoint.UserList => (
-                new Dictionary<string, object> { ["take"] = PAGE_SIZE }, null),
+                new Dictionary<string, object> { ["take"] = MAX_SAFE_INTEGER }, null),
             _ => (null, null)
         };
     }
