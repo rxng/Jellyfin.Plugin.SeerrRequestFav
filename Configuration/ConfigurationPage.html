@@ -1,0 +1,171 @@
+<div id="seerrRequestFavConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-controller="__plugin/ConfigurationPage.js">
+    <div data-role="content">
+        <div class="content-primary">
+            <style>
+                .srfSection {
+                    margin-bottom: 2em;
+                }
+                .srfSection h2 {
+                    border-bottom: 1px solid rgba(155,155,155,0.3);
+                    padding-bottom: 0.4em;
+                    margin-bottom: 1em;
+                }
+                .srfStatusBanner {
+                    padding: 0.75em 1em;
+                    border-radius: 4px;
+                    margin-bottom: 1em;
+                    display: none;
+                }
+                .srfStatusBanner.success { background: rgba(0, 164, 80, 0.2); border: 1px solid #00a450; }
+                .srfStatusBanner.error   { background: rgba(220, 50, 50, 0.2); border: 1px solid #dc3232; }
+                .srfStatusBanner.info    { background: rgba(0, 164, 220, 0.15); border: 1px solid #00a4dc; }
+                .srfRow {
+                    display: flex;
+                    gap: 1em;
+                    flex-wrap: wrap;
+                }
+                .srfRow .inputContainer {
+                    flex: 1;
+                    min-width: 200px;
+                }
+            </style>
+
+            <!-- Header -->
+            <div class="sectionTitleContainer flex align-items-center">
+                <h2 class="sectionTitle">SeerrRequestFav</h2>
+            </div>
+            <p>Automatically request movies and TV shows in Jellyseerr when you mark them as a favourite in Jellyfin.</p>
+
+            <!-- Status banner -->
+            <div id="srfStatusBanner" class="srfStatusBanner"></div>
+
+            <!-- ── 1. Jellyseerr Connection ─────────────────────────────────────── -->
+            <div class="srfSection">
+                <h2>Jellyseerr Connection</h2>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="srfIsEnabled" type="checkbox" class="emby-checkbox" />
+                        <span>Enable SeerrRequestFav</span>
+                    </label>
+                    <div class="fieldDescription checkboxFieldDescription">
+                        When disabled the plugin will not process any favourite events or run syncs.
+                    </div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="srfJellyseerrUrl">Jellyseerr URL</label>
+                    <input id="srfJellyseerrUrl" type="url" class="emby-input" placeholder="http://192.168.1.x:5055" />
+                    <div class="fieldDescription">Base URL of your Jellyseerr/Overseerr instance (no trailing slash).</div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="srfApiKey">API Key</label>
+                    <input id="srfApiKey" type="password" class="emby-input" placeholder="Your Jellyseerr API key" />
+                    <div class="fieldDescription">Found in Jellyseerr → Settings → General.</div>
+                </div>
+
+                <div style="margin-top: 1em;">
+                    <button id="srfTestConnectionBtn" class="emby-button emby-button-submit">
+                        <span>Test Connection</span>
+                    </button>
+                    <span id="srfTestConnectionResult" style="margin-left: 1em; font-size: 0.9em;"></span>
+                </div>
+            </div>
+
+            <!-- ── 2. Favourite Request Behaviour ─────────────────────────────── -->
+            <div class="srfSection">
+                <h2>Favourite Request Behaviour</h2>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="srfResponsiveFavoriteRequests" type="checkbox" class="emby-checkbox" />
+                        <span>Reactive favourite requests</span>
+                    </label>
+                    <div class="fieldDescription checkboxFieldDescription">
+                        Immediately send a request to Jellyseerr when an item is marked as favourite.
+                        When disabled you must use the <em>Sync Favourites</em> button manually.
+                    </div>
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="srfRemoveRequestedFromFavorites" type="checkbox" class="emby-checkbox" />
+                        <span>Unfavourite after requesting</span>
+                    </label>
+                    <div class="fieldDescription checkboxFieldDescription">
+                        Remove the favourite flag once the item has been successfully requested in Jellyseerr.
+                    </div>
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="srfRequestFirstSeason" type="checkbox" class="emby-checkbox" />
+                        <span>Request first season only for new TV shows</span>
+                    </label>
+                    <div class="fieldDescription checkboxFieldDescription">
+                        When requesting a TV series, only request season 1 instead of all seasons.
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5em;">
+                    <button id="srfSyncFavoritesBtn" class="emby-button emby-button-submit">
+                        <span>Sync Favourites Now</span>
+                    </button>
+                    <span id="srfSyncResult" style="margin-left: 1em; font-size: 0.9em;"></span>
+                </div>
+            </div>
+
+            <!-- ── 3. Advanced Settings ────────────────────────────────────────── -->
+            <details>
+                <summary>Advanced Settings</summary>
+                <div style="padding: 1em 0;">
+                    <div class="srfRow">
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="srfTaskTimeoutMinutes">Task timeout (minutes)</label>
+                            <input id="srfTaskTimeoutMinutes" type="number" min="1" max="120" class="emby-input" />
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="srfRequestTimeout">Request timeout (seconds)</label>
+                            <input id="srfRequestTimeout" type="number" min="5" max="300" class="emby-input" />
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="srfRetryAttempts">Retry attempts</label>
+                            <input id="srfRetryAttempts" type="number" min="0" max="10" class="emby-input" />
+                        </div>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription" style="margin-top: 1em;">
+                        <label class="emby-checkbox-label">
+                            <input id="srfEnableDebugLogging" type="checkbox" class="emby-checkbox" />
+                            <span>Enable debug logging</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">
+                            Elevates debug-level log entries to Information so they appear in the Jellyfin log.
+                        </div>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="srfEnableTraceLogging" type="checkbox" class="emby-checkbox" />
+                            <span>Enable trace logging</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">
+                            Very verbose – logs individual API calls and item-level detail.
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <!-- ── Save button ──────────────────────────────────────────────────── -->
+            <div style="margin-top: 2em;">
+                <button id="srfSaveConfigBtn" class="emby-button emby-button-submit">
+                    <span>Save Settings</span>
+                </button>
+            </div>
+
+            <!-- Plugin version -->
+            <p id="srfPluginVersion" style="margin-top: 2em; font-size: 0.8em; opacity: 0.6;"></p>
+        </div>
+    </div>
+</div>
