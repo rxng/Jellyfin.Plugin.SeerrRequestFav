@@ -65,16 +65,24 @@ jobs:
           echo "MD5=$MD5"   >> "$GITHUB_OUTPUT"
 
       # ── Update manifest.json ───────────────────────────────────────────────
-      - name: Update manifest.json
+      # (manifest is updated in the "Commit updated manifest" step below,
+      #  on the latest main branch to avoid non-fast-forward push errors)
+
+      # ── Commit manifest back to main ───────────────────────────────────────
+      - name: Commit updated manifest
         run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Switch to main (handles detached HEAD from tag checkout)
+          git fetch origin main
+          git checkout -B main origin/main
+          # Re-apply the manifest update onto the latest main
           VERSION="${{ steps.version.outputs.VERSION }}"
           ZIP="${{ steps.package.outputs.ZIP }}"
           MD5="${{ steps.package.outputs.MD5 }}"
           REPO="${{ github.repository }}"
           DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${ZIP}"
           TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-
-          # Prepend new version entry into the versions array of manifest.json
           NEW_ENTRY=$(jq -n \
             --arg version  "$VERSION" \
             --arg changelog "https://github.com/${REPO}/releases/tag/v${VERSION}" \
@@ -83,22 +91,11 @@ jobs:
             --arg checksum  "$MD5" \
             --arg timestamp "$TIMESTAMP" \
             '{version: $version, changelog: $changelog, targetAbi: $targetAbi, sourceUrl: $sourceUrl, checksum: $checksum, timestamp: $timestamp}')
-
-          # Insert at front of versions array (newest first)
           jq --argjson entry "$NEW_ENTRY" '.[0].versions = [$entry] + .[0].versions' manifest.json > manifest.tmp
           mv manifest.tmp manifest.json
-
-          echo "Updated manifest.json:"
-          cat manifest.json
-
-      # ── Commit manifest back to main ───────────────────────────────────────
-      - name: Commit updated manifest
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add manifest.json
-          git commit -m "chore: add v${{ steps.version.outputs.VERSION }} to manifest [skip ci]"
-          git push origin HEAD:main
+          git commit -m "chore: add v${VERSION} to manifest [skip ci]"
+          git push origin main
 
       # ── Create GitHub Release ──────────────────────────────────────────────
       - name: Create GitHub Release
