@@ -241,7 +241,7 @@ public class FavoriteService
                 }
                 else
                 {
-                    _logger.LogWarning("No valid response for '{ItemName}' – added to blocked list", item.Name);
+                    _logger.LogWarning("No valid response for '{ItemName}' – request failed", item.Name);
                     blocked.Add(item);
                 }
             }
