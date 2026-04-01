@@ -241,8 +241,10 @@ public class FavoriteService
                 }
                 else
                 {
-                    _logger.LogWarning("No valid response for '{ItemName}' – request failed", item.Name);
-                    blocked.Add(item);
+                    // HTTP 2xx was received (no exception thrown) so Jellyseerr created the request –
+                    // we just couldn't parse the response ID. Treat as success.
+                    _logger.LogDebug("Request created for '{ItemName}' (response Id unreadable, treating as success)", item.Name);
+                    processed.Add(item.Id);
                 }
             }
             catch (Exception ex)
