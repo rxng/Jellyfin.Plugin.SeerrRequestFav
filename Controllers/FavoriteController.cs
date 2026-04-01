@@ -86,15 +86,21 @@ public class FavoriteController : ControllerBase
             }
 
             // Test basic connectivity — short timeout so the UI doesn't hang.
-            await _apiService.TestConnectionAsync(jellyseerrUrl, apiKey, connectionTimeoutSeconds: 10, maxRetries: 1);
+            _logger.LogInformation("Testing basic connectivity to Jellyseerr at: {Url}", jellyseerrUrl);
+            var status = await _apiService.TestConnectionAsync(jellyseerrUrl, apiKey, connectionTimeoutSeconds: 10, maxRetries: 1);
+            _logger.LogInformation("Basic connectivity OK (Jellyseerr v{Version})", status?.Version);
 
             // Check that the API key has user-list privileges (required for request mapping).
+            // Use the same short timeout to avoid the UI hanging during the privileges check.
             var testConfig = new PluginConfiguration
             {
                 JellyseerrUrl = jellyseerrUrl!,
-                ApiKey = apiKey
+                ApiKey = apiKey,
+                RequestTimeout = 10,
+                RetryAttempts = 1
             };
 
+            _logger.LogInformation("Checking user-list privileges for API key");
             var usersResult = await _apiService.CallEndpointAsync(JellyseerrEndpoint.UserList, testConfig);
             var users = usersResult as List<JellyseerrUser>;
 
@@ -112,23 +118,39 @@ public class FavoriteController : ControllerBase
             return Ok(new
             {
                 success = true,
-                message = $"Connected to Jellyseerr. Found {users.Count} user(s).",
+                message = $"Connected to Jellyseerr v{status?.Version}. Found {users.Count} user(s).",
                 userCount = users.Count
             });
         }
         catch (HttpRequestException ex) when (ex.StatusCode != null)
         {
-            _logger.LogWarning(ex, "TestConnection HTTP error");
+            _logger.LogWarning(ex, "TestConnection HTTP error ({StatusCode})", (int)ex.StatusCode);
             return StatusCode((int)ex.StatusCode, new
             {
                 success = false,
-                message = $"Jellyseerr returned HTTP {(int)ex.StatusCode}",
+                message = ex.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.Unauthorized => "Invalid API key – Jellyseerr rejected the credentials.",
+                    System.Net.HttpStatusCode.Forbidden    => "API key lacks required permissions.",
+                    System.Net.HttpStatusCode.BadGateway   => "Could not reach Jellyseerr – check the URL.",
+                    _ => $"Jellyseerr returned HTTP {(int)ex.StatusCode}"
+                },
                 details = ex.Message
+            });
+        }
+        catch (TimeoutException ex)
+        {
+            _logger.LogWarning(ex, "TestConnection timed out");
+            return StatusCode(408, new
+            {
+                success = false,
+                message = "Connection timed out – check that Jellyseerr is running and the URL is correct.",
+                errorCode = "TIMEOUT"
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "TestConnection failed");
+            _logger.LogError(ex, "TestConnection failed unexpectedly");
             return StatusCode(500, new
             {
                 success = false,

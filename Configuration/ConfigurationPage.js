@@ -24,35 +24,41 @@ function setInlineResult(page, spanId, text, success) {
     span.style.color = success ? "#00a450" : "#dc3232";
 }
 
-async function apiGet(path) {
-    const url = ApiClient.getUrl(`/${API_BASE}/${path}`);
-    const resp = await fetch(url, {
-        headers: { "X-MediaBrowser-Token": ApiClient.accessToken() }
-    });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    return resp.json();
+/** Extracts a human-readable message from an ApiClient.ajax rejection. */
+function ajaxErrMsg(err) {
+    if (err && err.responseJSON && err.responseJSON.message) return err.responseJSON.message;
+    if (err && err.responseText) {
+        try { const j = JSON.parse(err.responseText); if (j.message) return j.message; } catch (_) {}
+        return err.responseText;
+    }
+    if (err && err.statusText) return `HTTP ${err.status}: ${err.statusText}`;
+    if (err instanceof Error) return err.message;
+    return String(err);
 }
 
-async function apiPost(path, body) {
-    const url = ApiClient.getUrl(`/${API_BASE}/${path}`);
-    const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-MediaBrowser-Token": ApiClient.accessToken()
-        },
-        body: JSON.stringify(body ?? {})
+function apiGet(path) {
+    return ApiClient.ajax({
+        url: ApiClient.getUrl(`${API_BASE}/${path}`),
+        type: "GET",
+        dataType: "json"
     });
-    const data = await resp.json().catch(() => ({}));
-    if (!resp.ok) throw Object.assign(new Error(data.message || `HTTP ${resp.status}`), { data, status: resp.status });
-    return data;
+}
+
+function apiPost(path, body) {
+    return ApiClient.ajax({
+        url: ApiClient.getUrl(`${API_BASE}/${path}`),
+        type: "POST",
+        data: JSON.stringify(body ?? {}),
+        contentType: "application/json",
+        dataType: "json"
+    });
 }
 
 // ── Load config ────────────────────────────────────────────────────────────────
 
 async function loadConfig(page) {
     try {
-        const cfg = await apiGet("PluginConfiguration");
+        const cfg = await apiGet("PluginConfiguration").catch(err => { throw new Error(ajaxErrMsg(err)); });
 
         setCheck(page, "srfIsEnabled",                    cfg.IsEnabled);
         setInput(page, "srfJellyseerrUrl",                cfg.JellyseerrUrl);
@@ -106,7 +112,7 @@ async function saveConfig(page) {
         await apiPost("PluginConfiguration", payload);
         setBanner(page, "Settings saved successfully.", "success");
     } catch (err) {
-        setBanner(page, `Save failed: ${err.message}`, "error");
+        setBanner(page, `Save failed: ${ajaxErrMsg(err)}`, "error");
     }
 }
 
@@ -141,7 +147,7 @@ async function testConnection(page) {
         setInlineResult(
             page,
             "srfTestConnectionResult",
-            err.data?.message || err.message || "Connection failed",
+            ajaxErrMsg(err),
             false
         );
     } finally {
@@ -161,8 +167,7 @@ async function syncFavorites(page) {
         setInlineResult(page, "srfSyncResult",
             result.message || `Done. Created: ${result.created ?? 0}`, true);
     } catch (err) {
-        setInlineResult(page, "srfSyncResult",
-            err.data?.message || err.message || "Sync failed", false);
+        setInlineResult(page, "srfSyncResult", ajaxErrMsg(err), false);
     } finally {
         if (btn) btn.disabled = false;
     }
@@ -171,17 +176,24 @@ async function syncFavorites(page) {
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 export default function (view) {
-    // Attach click handlers once (not inside viewshow to avoid duplicates)
-    view.querySelector("#srfSaveConfigBtn")
-        ?.addEventListener("click", () => saveConfig(view));
-
-    view.querySelector("#srfTestConnectionBtn")
-        ?.addEventListener("click", () => testConnection(view));
-
-    view.querySelector("#srfSyncFavoritesBtn")
-        ?.addEventListener("click", () => syncFavorites(view));
+    let initialized = false;
 
     view.addEventListener("viewshow", function () {
+        // Register click handlers once, guarded by initialized flag to prevent
+        // duplicates if viewshow fires multiple times.
+        if (!initialized) {
+            view.querySelector("#srfSaveConfigBtn")
+                ?.addEventListener("click", () => saveConfig(view));
+
+            view.querySelector("#srfTestConnectionBtn")
+                ?.addEventListener("click", () => testConnection(view));
+
+            view.querySelector("#srfSyncFavoritesBtn")
+                ?.addEventListener("click", () => syncFavorites(view));
+
+            initialized = true;
+        }
+
         loadConfig(view);
     });
 }
