@@ -221,8 +221,10 @@ public class ApiService
                 content = await MakeApiRequestAsync(req, config);
                 if (content == null) return GetDefaultReturn(endpoint);
 
-                _logger.LogTrace("Raw response for {Operation}: {Content}", operationName, content);
                 var response = SeerrRequestFavJsonSerializer.Deserialize(content, endpointConfig.ResponseModel);
+                if (response == null)
+                    _logger.LogWarning("{Operation} deserialization returned null. Raw response: {Content}",
+                        operationName, content?.Length > 500 ? content[..500] + "…" : content);
                 return response ?? GetDefaultReturn(endpoint);
             }
         }
