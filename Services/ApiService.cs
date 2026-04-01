@@ -296,9 +296,10 @@ public class ApiService
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var ex = new HttpRequestException($"Jellyseerr returned {(int)response.StatusCode} for {url}");
-                    ex.Data["StatusCode"] = (int)response.StatusCode;
-                    throw ex;
+                    throw new HttpRequestException(
+                        $"Jellyseerr returned {(int)response.StatusCode} for {url}",
+                        null,
+                        response.StatusCode);
                 }
 
                 var content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
@@ -349,12 +350,24 @@ public class ApiService
     /// <summary>
     /// Tests connectivity to Jellyseerr and validates the API key.
     /// </summary>
-    public async Task<SystemStatus> TestConnectionAsync(string? jellyseerUrl = null, string? apiKey = null)
+    /// <param name="connectionTimeoutSeconds">Override request timeout. 0 = use plugin config value.</param>
+    /// <param name="maxRetries">Override retry attempts. 0 = use plugin config value.</param>
+    public async Task<SystemStatus> TestConnectionAsync(
+        string? jellyseerUrl = null,
+        string? apiKey = null,
+        int connectionTimeoutSeconds = 0,
+        int maxRetries = 0)
     {
         jellyseerUrl ??= Plugin.GetConfigOrDefault<string>(nameof(PluginConfiguration.JellyseerrUrl));
         apiKey ??= Plugin.GetConfigOrDefault<string>(nameof(PluginConfiguration.ApiKey));
 
-        var testConfig = new PluginConfiguration { JellyseerrUrl = jellyseerUrl, ApiKey = apiKey };
+        var testConfig = new PluginConfiguration
+        {
+            JellyseerrUrl = jellyseerUrl,
+            ApiKey = apiKey,
+            RequestTimeout = connectionTimeoutSeconds > 0 ? connectionTimeoutSeconds : null,
+            RetryAttempts = maxRetries > 0 ? maxRetries : null
+        };
 
         var statusRequest = JellyseerrUrlBuilder.BuildEndpointRequest(
             jellyseerUrl, JellyseerrEndpoint.Status, apiKey);
@@ -363,9 +376,10 @@ public class ApiService
         var status = SeerrRequestFavJsonSerializer.Deserialize<SystemStatus>(statusContent!);
         if (status == null || string.IsNullOrEmpty(status.Version))
         {
-            var ex = new HttpRequestException($"Jellyseerr returned empty status response from {statusRequest.RequestUri}");
-            ex.Data["StatusCode"] = 502;
-            throw ex;
+            throw new HttpRequestException(
+                $"Jellyseerr returned empty status response from {statusRequest.RequestUri}",
+                null,
+                System.Net.HttpStatusCode.BadGateway);
         }
 
         var authRequest = JellyseerrUrlBuilder.BuildEndpointRequest(
@@ -375,9 +389,10 @@ public class ApiService
         var userInfo = SeerrRequestFavJsonSerializer.Deserialize<JellyseerrUser>(authContent!);
         if (userInfo == null || userInfo.Id == 0)
         {
-            var ex = new HttpRequestException($"Jellyseerr API key validation failed for {authRequest.RequestUri}");
-            ex.Data["StatusCode"] = 401;
-            throw ex;
+            throw new HttpRequestException(
+                $"Jellyseerr API key validation failed for {authRequest.RequestUri}",
+                null,
+                System.Net.HttpStatusCode.Unauthorized);
         }
 
         return status;

@@ -85,8 +85,8 @@ public class FavoriteController : ControllerBase
                 });
             }
 
-            // Test basic connectivity.
-            await _apiService.TestConnectionAsync(jellyseerrUrl, apiKey);
+            // Test basic connectivity — short timeout so the UI doesn't hang.
+            await _apiService.TestConnectionAsync(jellyseerrUrl, apiKey, connectionTimeoutSeconds: 10, maxRetries: 1);
 
             // Check that the API key has user-list privileges (required for request mapping).
             var testConfig = new PluginConfiguration

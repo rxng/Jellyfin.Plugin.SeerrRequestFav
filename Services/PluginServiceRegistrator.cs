@@ -18,6 +18,9 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddLogging();
 
         // HTTP client for the Jellyseerr API.
+        // AddHttpClient<T>() registers ApiService as a typed client with a managed HttpClient.
+        // Do NOT also call AddScoped<ApiService>() — that would shadow the typed client
+        // registration and break HttpClient injection.
         serviceCollection.AddHttpClient<ApiService>();
 
         // Thin wrappers around Jellyfin interfaces that handle version-conditional types.
@@ -34,7 +37,6 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
                 provider.GetRequiredService<MediaBrowser.Controller.Library.IUserManager>()));
 
         // Core services.
-        serviceCollection.AddScoped<ApiService>();
         serviceCollection.AddScoped<FavoriteService>();
 
         // Controllers.
