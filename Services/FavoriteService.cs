@@ -233,6 +233,12 @@ public class FavoriteService
                     results.Add((item, request));
                     _logger.LogDebug("Request created for '{ItemName}'", item.Name);
                 }
+                else if (raw == null)
+                {
+                    // null = 409 already exists in Jellyseerr – not a failure
+                    _logger.LogDebug("'{ItemName}' already requested in Jellyseerr – skipping", item.Name);
+                    processed.Add(item.Id);
+                }
                 else
                 {
                     _logger.LogWarning("No valid response for '{ItemName}' – added to blocked list", item.Name);
