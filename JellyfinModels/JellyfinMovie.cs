@@ -55,10 +55,10 @@ public class JellyfinMovie : WrapperBase<Movie>, IJellyfinItem
     public bool ItemsMatch(IJellyfinItem other) => other != null && Id == other.Id;
 
     /// <summary>
-    /// True when a real video file exists on disk (not a virtual/stream item).
+    /// True when a real video file or folder exists on disk (not a virtual/stream item).
     /// </summary>
     public bool HasLocalFile() =>
         Inner.LocationType == LocationType.FileSystem &&
         !string.IsNullOrEmpty(Inner.Path) &&
-        File.Exists(Inner.Path);
+        (File.Exists(Inner.Path) || Directory.Exists(Inner.Path));
 }

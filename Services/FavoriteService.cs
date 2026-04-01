@@ -118,10 +118,12 @@ public class FavoriteService
 
         try
         {
-            var requestsResult = await _apiService.CallEndpointAsync(JellyseerrEndpoint.ReadRequests);
+var requestsResult = await _apiService.CallEndpointAsync(JellyseerrEndpoint.ReadRequests);
             var jellyseerrRequests = requestsResult as List<JellyseerrMediaRequest> ?? new List<JellyseerrMediaRequest>();
 
-            _logger.LogDebug("Fetched {Count} existing requests from Jellyseerr", jellyseerrRequests.Count);
+            var withMedia = jellyseerrRequests.Count(r => r != null && r.JellyseerrMedia != null);
+            _logger.LogInformation("ReadRequests: {Total} requests fetched, {WithMedia} have media object populated",
+                jellyseerrRequests.Count, withMedia);
 
             // Build lookup of (MediaType, TmdbId) for non-declined requests.
             var requestedLookup = new HashSet<(MediaType type, int tmdbId)>(
@@ -130,6 +132,9 @@ public class FavoriteService
                                 r.Status != MediaRequestStatus.DECLINED &&
                                 r.JellyseerrMedia != null)
                     .Select(r => (r.JellyseerrMedia!.MediaType, r.JellyseerrMedia.TmdbId)));
+
+            _logger.LogInformation("ReadRequests lookup built: {Count} unique (mediaType, tmdbId) entries",
+                requestedLookup.Count);
 
             foreach (var fav in allFavorites)
             {
