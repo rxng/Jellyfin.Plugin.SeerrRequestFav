@@ -12,34 +12,41 @@ public class JellyseerrMedia : Media
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public new MediaType MediaType { get; set; }
 
+    [JsonIgnore]
+    public new List<DownloadingItem> DownloadStatus { get; set; } = new();
     [JsonPropertyName("downloadStatus")]
-    public new List<JellyseerrDownloadingItem> DownloadStatus { get; set; } = new();
+    public List<JellyseerrDownloadingItem> DownloadStatusList { get; set; } = new();
 
+    [JsonIgnore]
+    public new List<DownloadingItem> DownloadStatus4k { get; set; } = new();
     [JsonPropertyName("downloadStatus4k")]
-    public new List<JellyseerrDownloadingItem> DownloadStatus4k { get; set; } = new();
+    public List<JellyseerrDownloadingItem> DownloadStatus4kList { get; set; } = new();
 
+    [JsonIgnore]
+    public new string Watchlists { get; set; } = string.Empty;
     [JsonPropertyName("watchlists")]
     public List<JellyseerrWatchlist> WatchlistsList { get; set; } = new();
 
+    [JsonIgnore]
+    public new string? ServiceId { get; set; }
     [JsonPropertyName("serviceId")]
     public int? ServiceIdInt { get; set; }
 
+    [JsonIgnore]
+    public new string? ServiceId4k { get; set; }
     [JsonPropertyName("serviceId4k")]
     public int? ServiceId4kInt { get; set; }
 
+    [JsonIgnore]
+    public new string? ExternalServiceId { get; set; }
     [JsonPropertyName("externalServiceId")]
     public int? ExternalServiceIdInt { get; set; }
 
+    [JsonIgnore]
+    public new string? ExternalServiceId4k { get; set; }
     [JsonPropertyName("externalServiceId4k")]
     public int? ExternalServiceId4kInt { get; set; }
 
     [JsonPropertyName("requests")]
     public List<JellyseerrMediaRequest> JellyseerrRequests { get; set; } = new();
-
-    // Suppress Plex/Tautulli properties not used
-    [JsonIgnore]
-    public object? PlexUrl { get; set; }
-
-    [JsonIgnore]
-    public object? IsPlex { get; set; }
 }
