@@ -242,7 +242,7 @@ public class FavoriteController : ControllerBase
             var cleared = await _favoriteService.ClearRequestedFavoritesAsync(allRequestedFavs);
 
             _logger.LogInformation(
-                "SyncFavorites complete: {Created} created, {Blocked} blocked, {Cleared} unfavourited, {Local} skipped (on disk)",
+                "SyncFavorites complete: {Created} created, {Failed} failed, {Cleared} unfavourited, {Local} skipped (on disk)",
                 processed.Count, blocked.Count, cleared.Count, alreadyLocal.Count);
 
             return (object)new
@@ -251,7 +251,7 @@ public class FavoriteController : ControllerBase
                 message = $"Sync complete. Created {processed.Count} request(s).",
                 created = processed.Count,
                 alreadyRequested = alreadyRequested.Count,
-                blocked = blocked.Count,
+                failed = blocked.Count,
                 cleared = cleared.Count,
                 skippedLocal = alreadyLocal.Count,
                 skippedNoUser = pendingFavorites.Count - withUser.Count
